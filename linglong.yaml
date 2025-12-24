@@ -1,0 +1,51 @@
+version: "1"
+
+package:
+  id: com.zhaoxin.linux.graphics.driver
+  name: zhaoxin linux graphics driver
+  version: 25.2.0.0
+  kind: extension
+  description: |
+    Zhaoxin linux graphics driver, covert from deb 21.00.82.
+  env:
+    __EGL_VENDOR_LIBRARY_DIRS: $PREFIX/glvnd/egl_vendor.d:$ORIGIN
+    LIBGL_DRIVERS_PATH: $ORIGIN:$PREFIX/lib/dri
+    LIBVA_DRIVERS_PATH: $ORIGIN:$PREFIX/lib/dri
+    GBM_BACKENDS_PATH: $ORIGIN:$PREFIX/lib/gbm
+
+permissions:
+  innerBinds:
+    - source: /opt/extensions/com.zhaoxin.linux.graphics.driver/glvnd/egl_vendor.d/10_zx.json
+      destination: /usr/share/glvnd/egl_vendor.d/10_zx.json
+    - source: /opt/extensions/com.zhaoxin.linux.graphics.driver/lib/libGLX_zx.so.0
+      destination: /usr/lib/x86_64-linux-gnu/libGLX_zx.so.0
+    - source: /opt/extensions/com.zhaoxin.linux.graphics.driver/lib/libEGL_zx.so.0
+      destination: /usr/lib/x86_64-linux-gnu/libEGL_zx.so.0
+
+
+base: org.deepin.base/25.2.1
+
+sources:
+  - kind: file
+    url: http://pools.uniontech.com/desktop-professional-V25/pool/commercial/z/zhaoxin-linux-graphics-driver-dri/zhaoxin-linux-graphics-driver-dri_21.00.82_amd64.deb
+    digest: 9bfb4e92d05a6eafdd65c7f96ae36053e6062f4e53129c115b4949aa78d176fb
+    name: zhaoxin-linux-graphics-driver-dri-amd64.deb
+
+build: |
+  echo 'hello' #some operation to build this project
+
+  rm -rf extracted
+  dpkg-deb -R /project/linglong/sources/zhaoxin-linux-graphics-driver-dri-amd64.deb extracted
+
+  mkdir -p $PREFIX/lib
+  cp -r extracted/usr/lib/${TRIPLET}/* $PREFIX/lib
+
+  mkdir -p $PREFIX/glvnd
+  cp -r extracted/usr/share/glvnd/* $PREFIX/glvnd
+  sed -i "s/\"library_path\" : \"\"/\"library_path\" : \"libEGL_zx.so.0\"/g" $PREFIX/glvnd/egl_vendor.d/10_zx.json
+
+  ldconfig
+
+  rm -rf extracted
+
+  echo 'build done'
